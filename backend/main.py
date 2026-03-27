@@ -36,8 +36,9 @@ async def lifespan(app: FastAPI):
 
     # 启动指标收集
     async def save_metrics(metrics):
-        db = next(get_db())
+        db = None
         try:
+            db = next(get_db())
             for gpu in metrics.get("gpus", []):
                 gpu_stat = GPUStats(
                     node_id="local",
@@ -54,7 +55,8 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             print(f"Error saving metrics: {e}")
         finally:
-            db.close()
+            if db:
+                db.close()
 
     metrics_collector.register_callback(save_metrics)
     metrics_task = asyncio.create_task(metrics_collector.collect_loop(interval=10))

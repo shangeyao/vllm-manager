@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     METRICS_PORT: int = 9090
     
     # Security
-    SECRET_KEY: str = "your-secret-key-change-in-production"
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     class Config:

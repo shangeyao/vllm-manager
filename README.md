@@ -174,16 +174,16 @@ export MYSQL_DATABASE=vllm_manager
 
 <table>
   <tr>
-    <td><img src="docs/images/dashboard.png" alt="仪表盘" width="400"/></td>
-    <td><img src="docs/images/model-store.png" alt="模型仓库" width="400"/></td>
+    <td><img src="/docs/images/dashboard.png" alt="仪表盘" width="400"/></td>
+    <td><img src="/docs/images/model-store.png" alt="模型仓库" width="400"/></td>
   </tr>
   <tr>
     <td align="center">仪表盘</td>
     <td align="center">模型仓库</td>
   </tr>
   <tr>
-    <td><img src="docs/images/model-deploy.png" alt="模型部署" width="400"/></td>
-    <td><img src="docs/images/monitoring.png" alt="监控统计" width="400"/></td>
+    <td><img src="/docs/images/model-deploy.png" alt="模型部署" width="400"/></td>
+    <td><img src="/docs/images/monitoring.png" alt="监控统计" width="400"/></td>
   </tr>
   <tr>
     <td align="center">模型部署</td>
