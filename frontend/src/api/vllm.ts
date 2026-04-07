@@ -22,6 +22,7 @@ export const getModelInstances = async (): Promise<ModelInstance[]> => {
   const response = await api.get('/v1/instances');
   return response.data.map((instance: any) => ({
     ...instance,
+    modelId: instance.model_id,
     createdAt: new Date(instance.created_at).toLocaleString('zh-CN'),
   }));
 };
@@ -210,5 +211,26 @@ export const refreshModelList = async (params?: {
   searchQuery?: string;
 }): Promise<{ success: boolean; message: string; count: number; source?: string }> => {
   const response = await api.post('/v1/models/refresh', params || {});
+  return response.data;
+};
+
+// Model Instance Operations API
+export const startInstance = async (instanceId: string): Promise<{ success: boolean; message: string; instance_id: string }> => {
+  const response = await api.post(`/v1/instances/${instanceId}/start`);
+  return response.data;
+};
+
+export const stopInstance = async (instanceId: string): Promise<{ success: boolean; message: string }> => {
+  const response = await api.post(`/v1/instances/${instanceId}/stop`);
+  return response.data;
+};
+
+export const restartInstance = async (instanceId: string): Promise<{ success: boolean; message: string; instance_id: string }> => {
+  const response = await api.post(`/v1/instances/${instanceId}/restart`);
+  return response.data;
+};
+
+export const deleteInstance = async (instanceId: string): Promise<{ success: boolean; message: string }> => {
+  const response = await api.delete(`/v1/instances/${instanceId}`);
   return response.data;
 };

@@ -33,12 +33,14 @@ export interface ModelInstance {
   id: string;
   name: string;
   modelName: string;
+  modelId?: string;
   modelType: string;
   status: 'running' | 'stopped' | 'pending' | 'error';
   version: string;
   createdAt: string;
   replicas: number;
   gpus: string[];
+  config?: Record<string, any>;
   replicas_detail?: {
     id: string;
     node: string;

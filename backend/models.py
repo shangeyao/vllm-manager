@@ -25,6 +25,7 @@ class ModelInstance(Base):
     id = Column(String, primary_key=True)
     name = Column(String, nullable=False)
     model_name = Column(String, nullable=False)
+    model_id = Column(String)
     model_type = Column(String, nullable=False)
     status = Column(String, default="stopped")
     version = Column(String)

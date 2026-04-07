@@ -8,6 +8,7 @@ import {
   SettingOutlined,
   BarChartOutlined,
   UserOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
 
@@ -22,6 +23,11 @@ const Sidebar = () => {
       key: '/',
       icon: <DashboardOutlined />,
       label: '工作台',
+    },
+    {
+      key: '/playground',
+      icon: <ThunderboltOutlined />,
+      label: '模型测试台',
     },
     {
       key: 'models',

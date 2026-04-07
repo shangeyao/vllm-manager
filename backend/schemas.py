@@ -32,6 +32,7 @@ class ModelInfo(BaseModel):
 class ModelInstanceCreate(BaseModel):
     name: str
     model_name: str
+    model_id: Optional[str] = None
     model_type: str = "llm"
     replicas: int = 1
     gpus: List[str] = []
@@ -42,12 +43,14 @@ class ModelInstanceResponse(BaseModel):
     id: str
     name: str
     model_name: str
+    model_id: Optional[str]
     model_type: str
     status: str
     version: Optional[str]
     created_at: datetime
     replicas: int
     gpus: List[str]
+    config: Optional[Dict[str, Any]]
     node: Optional[str]
     
     class Config:

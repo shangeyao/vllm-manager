@@ -9,6 +9,7 @@ import ModelInstances from './pages/ModelInstances'
 import DeviceInfo from './pages/DeviceInfo'
 import ModelStats from './pages/ModelStats'
 import SystemManagement from './pages/SystemManagement'
+import ChatPlayground from './pages/ChatPlayground'
 import './App.css'
 
 const { Content } = Layout
@@ -23,6 +24,7 @@ function App() {
           <Content style={{ margin: '24px', background: '#f5f5f5' }}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/playground" element={<ChatPlayground />} />
               <Route path="/models/store" element={<ModelStore />} />
               <Route path="/models/register" element={<ModelRegister />} />
               <Route path="/models/instances" element={<ModelInstances />} />
