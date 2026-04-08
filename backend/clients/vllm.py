@@ -510,6 +510,116 @@ class VLLMProcessManager:
             for id in to_remove:
                 del self.instances[id]
 
+    def discover_existing_processes(self) -> List[Dict[str, Any]]:
+        """发现系统中现有的 vLLM 进程"""
+        import psutil
+        discovered = []
+        
+        try:
+            for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+                try:
+                    cmdline = proc.cmdline()
+                    # 检查是否是 vLLM 进程
+                    if any('vllm' in arg.lower() and 'api_server' in arg for arg in cmdline):
+                        # 提取端口和模型路径
+                        port = None
+                        model_path = None
+                        
+                        for i, arg in enumerate(cmdline):
+                            if arg == '--port' and i + 1 < len(cmdline):
+                                port = int(cmdline[i + 1])
+                            elif arg == '--model' and i + 1 < len(cmdline):
+                                model_path = cmdline[i + 1]
+                        
+                        if port and model_path:
+                            # 检查端口是否已被管理
+                            with self._lock:
+                                is_managed = any(inst.port == port for inst in self.instances.values())
+                            
+                            if not is_managed:
+                                discovered.append({
+                                    'pid': proc.pid,
+                                    'port': port,
+                                    'model_path': model_path,
+                                    'cmdline': ' '.join(cmdline)
+                                })
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
+        except ImportError:
+            print("psutil not installed, cannot discover existing processes")
+        
+        return discovered
+
+    async def take_over_process(self, port: int, model_name: str = None) -> VLLMInstance:
+        """接管现有的 vLLM 进程"""
+        import uuid
+        import psutil
+        
+        # 验证进程是否存在
+        found = False
+        model_path = None
+        pid = None
+        
+        for proc in psutil.process_iter(['pid', 'cmdline']):
+            try:
+                cmdline = proc.cmdline()
+                if any('vllm' in arg.lower() and 'api_server' in arg for arg in cmdline):
+                    for i, arg in enumerate(cmdline):
+                        if arg == '--port' and i + 1 < len(cmdline) and int(cmdline[i + 1]) == port:
+                            found = True
+                            pid = proc.pid
+                            if '--model' in cmdline and i + 1 < len(cmdline):
+                                model_path = cmdline[cmdline.index('--model') + 1]
+                            break
+                    if found:
+                        break
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+        
+        if not found:
+            raise RuntimeError(f"No vLLM process found on port {port}")
+        
+        instance_id = str(uuid.uuid4())
+        instance = VLLMInstance(
+            id=instance_id,
+            model_name=model_name or model_path.split('/')[-1],
+            model_path=model_path or 'unknown',
+            port=port,
+            status="running",
+            status_message="External process taken over",
+            start_time=datetime.now(),
+            config={}
+        )
+        
+        # 添加接管日志
+        instance.add_log("INFO", f"Taking over external vLLM process on port {port}")
+        instance.add_log("INFO", f"Process PID: {pid}")
+        instance.add_log("INFO", f"Model path: {model_path}")
+        instance.add_log("SUCCESS", "External vLLM process taken over successfully")
+        
+        with self._lock:
+            self.instances[instance_id] = instance
+            self._used_ports.add(port)
+        
+        return instance
+
+    async def take_over_all_processes(self) -> List[VLLMInstance]:
+        """接管所有发现的 vLLM 进程"""
+        discovered = self.discover_existing_processes()
+        taken_over = []
+        
+        for proc_info in discovered:
+            try:
+                instance = await self.take_over_process(
+                    port=proc_info['port'],
+                    model_name=proc_info['model_path'].split('/')[-1]
+                )
+                taken_over.append(instance)
+            except Exception as e:
+                print(f"Failed to take over process on port {proc_info['port']}: {e}")
+        
+        return taken_over
+
 
 # 全局实例
 vllm_client = VLLMClient()

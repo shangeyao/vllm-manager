@@ -116,6 +116,75 @@ async def delete_instance(instance_id: str, db: Session = Depends(get_db)):
     return {"success": True, "message": "实例已删除"}
 
 
+@router.get("/discover")
+async def discover_processes():
+    """发现系统中现有的 vLLM 进程"""
+    processes = vllm_process_manager.discover_existing_processes()
+    return {
+        "success": True,
+        "processes": processes,
+        "count": len(processes)
+    }
+
+
+@router.post("/takeover")
+async def take_over_process(port: int, model_name: str = None, db: Session = Depends(get_db)):
+    """接管指定端口的 vLLM 进程"""
+    try:
+        instance = await vllm_process_manager.take_over_process(port, model_name)
+        
+        # 保存到数据库
+        db_instance = ModelInstance(
+            id=instance.id,
+            name=instance.model_name,
+            model_name=instance.model_name,
+            model_id=instance.model_path,
+            model_type="llm",
+            status=instance.status,
+            replicas=1,
+            gpus=[],
+            config=instance.config
+        )
+        db.add(db_instance)
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": "进程接管成功",
+            "instance": instance.to_dict()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/takeover/all")
+async def take_over_all_processes(db: Session = Depends(get_db)):
+    """接管所有发现的 vLLM 进程"""
+    instances = await vllm_process_manager.take_over_all_processes()
+    
+    # 保存到数据库
+    for instance in instances:
+        db_instance = ModelInstance(
+            id=instance.id,
+            name=instance.model_name,
+            model_name=instance.model_name,
+            model_id=instance.model_path,
+            model_type="llm",
+            status=instance.status,
+            replicas=1,
+            gpus=[],
+            config=instance.config
+        )
+        db.add(db_instance)
+    db.commit()
+    
+    return {
+        "success": True,
+        "message": f"成功接管 {len(instances)} 个进程",
+        "instances": [instance.to_dict() for instance in instances]
+    }
+
+
 @router.get("/{instance_id}/logs")
 async def get_instance_logs(
     instance_id: str,
